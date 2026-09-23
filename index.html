@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>課堂點名系統 | 智慧出勤管理</title>
+  <meta name="description" content="專業、直覺且美觀的課堂點名系統，支援學生名單管理、自訂日期點名、歷史紀錄查閱與出勤統計分析。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="header-left">
+          <div class="app-logo">
+            <svg class="icon-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+            </svg>
+            <span class="logo-text">課堂點名系統</span>
+          </div>
+
+          <!-- Multi-Course Switcher & Management -->
+          <div class="course-manage-group">
+            <span class="course-badge">課程選擇</span>
+            <div class="course-select-wrapper">
+              <select id="courseSelect" class="course-select-control" aria-label="選擇課程"></select>
+            </div>
+            <div class="course-quick-btns">
+              <button class="btn-icon btn-course-action" id="btnEditCourseName" title="修改當前課程名稱">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20h9"/>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              </button>
+              <button class="btn-icon btn-course-action" id="btnOpenAddCourseModal" title="新增一門課程">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+              <button class="btn-icon btn-course-action btn-danger-action" id="btnDeleteCourse" title="刪除當前課程">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Header Actions -->
+        <div class="header-actions">
+          <button class="btn btn-ghost" id="btnLoadSample" title="載入範例資料進行測試">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <span>載入範例</span>
+          </button>
+
+          <button class="btn btn-ghost" id="btnExportData" title="匯出備份資料 (JSON)">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>備份資料</span>
+          </button>
+
+          <button class="btn btn-ghost" id="btnThemeToggle" aria-label="切換深淺模式">
+            <span class="theme-icon-dark">🌙</span>
+            <span class="theme-icon-light">☀️</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="app-nav">
+        <button class="nav-tab active" data-tab="rollcall">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span>開始點名</span>
+        </button>
+
+        <button class="nav-tab" data-tab="students">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>學生名單</span>
+          <span class="nav-badge" id="navStudentCount">0</span>
+        </button>
+
+        <button class="nav-tab" data-tab="history">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>點名紀錄</span>
+          <span class="nav-badge" id="navHistoryCount">0</span>
+        </button>
+
+        <button class="nav-tab" data-tab="stats">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          <span>數據統計</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- 1. ROLL CALL VIEW -->
+      <section class="tab-pane active" id="view-rollcall">
+        <!-- Control Card -->
+        <div class="card session-settings-card">
+          <div class="session-settings-row">
+            <div class="input-group-date">
+              <label for="rollcallDate" class="form-label">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                點名日期 (可手動自訂)
+              </label>
+              <div class="date-input-wrapper">
+                <input type="date" id="rollcallDate" class="form-control" required>
+                <button type="button" class="btn btn-sm btn-outline" id="btnSetToday">今天</button>
+              </div>
+            </div>
+
+            <div class="input-group-note">
+              <label for="rollcallNote" class="form-label">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                課堂備註 (選填)
+              </label>
+              <input type="text" id="rollcallNote" class="form-control" placeholder="例：第 3 週 實習課、期中考、專案報告等">
+            </div>
+
+            <div class="quick-batch-actions">
+              <span class="action-label">快速設定：</span>
+              <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-success-light" id="btnQuickAllPresent">
+                  <span class="dot dot-success"></span> 全員出席
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" id="btnQuickReset">
+                  重設
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-time Live Counters -->
+          <div class="rollcall-stats-strip">
+            <div class="stat-pill stat-present">
+              <span class="dot dot-success"></span>
+              <span class="pill-label">出席</span>
+              <span class="pill-count" id="countPresent">0</span>
+            </div>
+            <div class="stat-pill stat-late">
+              <span class="dot dot-warning"></span>
+              <span class="pill-label">遲到</span>
+              <span class="pill-count" id="countLate">0</span>
+            </div>
+            <div class="stat-pill stat-absent">
+              <span class="dot dot-danger"></span>
+              <span class="pill-label">缺席</span>
+              <span class="pill-count" id="countAbsent">0</span>
+            </div>
+            <div class="stat-pill stat-unmarked">
+              <span class="dot dot-muted"></span>
+              <span class="pill-label">未點</span>
+              <span class="pill-count" id="countUnmarked">0</span>
+            </div>
+            <div class="stat-pill stat-total">
+              <span class="pill-label">總人數</span>
+              <span class="pill-count" id="countTotal">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Attendance Cards Grid -->
+        <div class="students-attendance-container">
+          <div class="list-header-row">
+            <div class="list-title">
+              <h2>學生出勤勾選清單</h2>
+              <span class="subtitle">點擊按鈕快速切換出勤狀態</span>
+            </div>
+            <div class="search-box-inline">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="searchRollcallStudent" placeholder="搜尋座號或姓名...">
+            </div>
+          </div>
+
+          <div class="attendance-grid" id="attendanceGrid">
+            <!-- Dynamic student cards injected via JS -->
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state hidden" id="emptyAttendanceState">
+            <div class="empty-icon">👥</div>
+            <h3>目前還沒有學生名單</h3>
+            <p>請先前往「學生名單」新增學生，或點擊上方「載入範例」以快速體驗。</p>
+            <button class="btn btn-primary" id="btnGoToStudents">前往新增學生</button>
+          </div>
+        </div>
+
+        <!-- Dedicated bottom spacer to ensure floating bar NEVER covers cards -->
+        <div class="rollcall-bottom-spacer" aria-hidden="true"></div>
+
+        <!-- Bottom Sticky Floating Bar -->
+        <div class="floating-action-bar" id="rollcallStickyBar">
+          <div class="floating-bar-info">
+            <span class="indicator-pulse"></span>
+            <span id="floatingStatusText">點名進行中...</span>
+          </div>
+          <div class="floating-bar-actions">
+            <button class="btn btn-outline" id="btnCancelRollcall">取消重設</button>
+            <button class="btn btn-primary btn-lg" id="btnSaveRollcall">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              <span>儲存本次點名紀錄</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. STUDENTS VIEW -->
+      <section class="tab-pane" id="view-students">
+        <div class="section-top-bar">
+          <div class="section-heading">
+            <h2>學生名單管理</h2>
+            <p class="section-desc">管理課堂所有學生名冊，支援快速新增、修改與刪除學生。</p>
+          </div>
+          <div class="section-actions">
+            <button class="btn btn-outline" id="btnOpenBatchAddModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <line x1="19" y1="8" x2="19" y2="14"/>
+                <line x1="22" y1="11" x2="16" y2="11"/>
+              </svg>
+              <span>批次快速匯入</span>
+            </button>
+            <button class="btn btn-primary" id="btnOpenAddStudentModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              <span>新增學生</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card filter-card">
+          <div class="filter-row">
+            <div class="search-box">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="searchStudentInput" placeholder="搜尋學生座號或姓名...">
+            </div>
+            <div class="filter-stats">
+              學生總計：<strong id="studentTotalBadge">0</strong> 位
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Table Card -->
+        <div class="card table-card">
+          <div class="table-responsive">
+            <table class="data-table" id="studentsTable">
+              <thead>
+                <tr>
+                  <th width="100">座號</th>
+                  <th>學生姓名</th>
+                  <th width="180">出勤概況 (出席/遲到/缺席)</th>
+                  <th width="120">操作</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div class="empty-state hidden" id="emptyStudentsState">
+            <div class="empty-icon">📝</div>
+            <h3>目前還沒有學生資料</h3>
+            <p>點擊右上角「新增學生」或「批次快速匯入」來建立班級名單！</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. HISTORY VIEW -->
+      <section class="tab-pane" id="view-history">
+        <div class="section-top-bar">
+          <div class="section-heading">
+            <h2>點名紀錄瀏覽</h2>
+            <p class="section-desc">查閱所有已完成的點名紀錄，按日期檢視詳細名單並支援更新或刪除。</p>
+          </div>
+          <div class="section-actions">
+            <button class="btn btn-outline" id="btnExportAllCsv">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="8" y1="13" x2="16" y2="13"/>
+                <line x1="8" y1="17" x2="16" y2="17"/>
+              </svg>
+              <span>匯出全學期點名表 (CSV)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="card filter-card">
+          <div class="filter-row">
+            <div class="date-filter-group">
+              <label for="historyDateFilter" class="filter-label">依日期篩選：</label>
+              <input type="date" id="historyDateFilter" class="form-control form-control-sm">
+              <button class="btn btn-sm btn-ghost" id="btnClearDateFilter">清除篩選</button>
+            </div>
+            <div class="filter-stats">
+              已記錄次數：<strong id="historyTotalCount">0</strong> 次
+            </div>
+          </div>
+        </div>
+
+        <!-- History Records Cards List -->
+        <div class="history-list-container" id="historyListContainer">
+          <!-- History session cards injected via JS -->
+        </div>
+
+        <div class="empty-state hidden" id="emptyHistoryState">
+          <div class="empty-icon">📅</div>
+          <h3>尚無點名紀錄</h3>
+          <p>完成第一次點名後，紀錄將會自動彙整於此處。</p>
+          <button class="btn btn-primary" id="btnGoToRollcall">前往開始點名</button>
+        </div>
+      </section>
+
+      <!-- 4. STATS VIEW -->
+      <section class="tab-pane" id="view-stats">
+        <div class="section-top-bar">
+          <div class="section-heading">
+            <h2>學生出勤統計分析</h2>
+            <p class="section-desc">統計全班整體及每位學生累積的出勤數據、出勤率與預警資訊。</p>
+          </div>
+        </div>
+
+        <!-- Top Overview Stats Cards -->
+        <div class="stats-overview-grid">
+          <div class="stat-card">
+            <div class="stat-card-icon stat-icon-blue">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div class="stat-card-info">
+              <span class="stat-card-title">總點名次數</span>
+              <span class="stat-card-value" id="statsTotalSessions">0</span>
+              <span class="stat-card-hint">全學期累計次數</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-icon stat-icon-indigo">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="stat-card-info">
+              <span class="stat-card-title">班級學生總數</span>
+              <span class="stat-card-value" id="statsTotalStudents">0</span>
+              <span class="stat-card-hint">目前註冊學生</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-icon stat-icon-emerald">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <div class="stat-card-info">
+              <span class="stat-card-title">全班平均出勤率</span>
+              <span class="stat-card-value" id="statsAvgRate">0%</span>
+              <span class="stat-card-hint">全班平均出席率</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-icon stat-icon-rose">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div class="stat-card-info">
+              <span class="stat-card-title">出勤預警人數</span>
+              <span class="stat-card-value" id="statsWarningCount">0</span>
+              <span class="stat-card-hint">缺席達 2 次或出勤率&lt;80%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Cumulative Table Card -->
+        <div class="card table-card">
+          <div class="card-header-with-actions">
+            <div>
+              <h3>學生累計出勤明細表</h3>
+              <p class="subtitle">可依出勤率、缺席次數排序，快速掌握出勤異常學生</p>
+            </div>
+            <div class="table-tools">
+              <select id="statsSortSelect" class="form-control form-control-sm">
+                <option value="seat-asc">按座號排序 (升冪)</option>
+                <option value="seat-desc">按座號排序 (降冪)</option>
+                <option value="rate-asc">按出勤率 (最低優先-預警)</option>
+                <option value="rate-desc">按出勤率 (最高優先)</option>
+                <option value="absent-desc">按缺席次數 (由多到少)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="statsTable">
+              <thead>
+                <tr>
+                  <th width="80">座號</th>
+                  <th>姓名</th>
+                  <th width="100">出席次數</th>
+                  <th width="100">遲到次數</th>
+                  <th width="100">缺席次數</th>
+                  <th width="180">出勤率</th>
+                  <th width="110">狀態評估</th>
+                </tr>
+              </thead>
+              <tbody id="statsTableBody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- 0. Add New Course Modal -->
+  <div class="modal-backdrop" id="modalAddCourse">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>新增課程</h3>
+        <button class="modal-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="inputNewCourseName" class="form-label">課程名稱 <span class="required">*</span></label>
+        <input type="text" id="inputNewCourseName" class="form-control" maxlength="50" placeholder="例如：113學年度 資料庫系統與實務" required>
+        <p class="modal-hint" style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+          建立後可切換至該課程，並為其獨立新增專屬的學生名冊與點名紀錄。
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal>取消</button>
+        <button class="btn btn-primary" id="btnSaveNewCourse">建立課程</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. Edit Course Name Modal -->
+  <div class="modal-backdrop" id="modalEditCourse">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>修改課程名稱</h3>
+        <button class="modal-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="inputCourseName" class="form-label">請輸入新的課程名稱：</label>
+        <input type="text" id="inputCourseName" class="form-control" maxlength="50" placeholder="例如：113學年度 網頁程式設計">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal>取消</button>
+        <button class="btn btn-primary" id="btnSaveCourseName">儲存變更</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Add / Edit Student Modal -->
+  <div class="modal-backdrop" id="modalStudent">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalStudentTitle">新增學生</h3>
+        <button class="modal-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="studentEditId">
+        <div class="form-group">
+          <label for="inputStudentSeat" class="form-label">學生座號 <span class="required">*</span></label>
+          <input type="text" id="inputStudentSeat" class="form-control" placeholder="例如：01 或 101" required>
+        </div>
+        <div class="form-group">
+          <label for="inputStudentName" class="form-label">學生姓名 <span class="required">*</span></label>
+          <input type="text" id="inputStudentName" class="form-control" placeholder="例如：陳建銘" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal>取消</button>
+        <button class="btn btn-primary" id="btnSaveStudent">確認送出</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Batch Add Students Modal -->
+  <div class="modal-backdrop" id="modalBatchAdd">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <h3>批次快速匯入學生名單</h3>
+        <button class="modal-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-description">
+          每行輸入一位學生，格式為「<strong>座號 姓名</strong>」或「<strong>座號,姓名</strong>」：
+        </p>
+        <div class="example-box">
+          範例：<br>
+          01 王小明<br>
+          02 李小華<br>
+          03 張美玲
+        </div>
+        <textarea id="batchInputText" class="form-control batch-textarea" rows="8" placeholder="請在此貼上學生名單..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal>取消</button>
+        <button class="btn btn-primary" id="btnSaveBatchStudents">開始匯入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Session Detail / View Modal -->
+  <div class="modal-backdrop" id="modalSessionDetail">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div>
+          <h3 id="sessionDetailTitle">點名紀錄詳情</h3>
+          <p class="subtitle" id="sessionDetailSubtitle"></p>
+        </div>
+        <button class="modal-close" data-close-modal>&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Summary Counts -->
+        <div class="session-detail-stats" id="sessionDetailStats">
+          <!-- Dynamic -->
+        </div>
+
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+          <table class="data-table" id="sessionDetailTable">
+            <thead>
+              <tr>
+                <th width="80">座號</th>
+                <th>姓名</th>
+                <th width="120">出勤狀態</th>
+              </tr>
+            </thead>
+            <tbody id="sessionDetailTableBody">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btnEditSessionFromDetail">重新編輯本次點名</button>
+        <button class="btn btn-primary" data-close-modal>關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Toast Notification Hub -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Main JavaScript Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
